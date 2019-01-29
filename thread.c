@@ -327,8 +327,10 @@ static void setup_thread(LIBEVENT_THREAD *me) {
     }
 
     /* Listen for notifications from other threads */
+    /* This thread will be listening on notify_receive_fd */
     event_set(&me->notify_event, me->notify_receive_fd,
               EV_READ | EV_PERSIST, thread_libevent_process, me);
+    // Each Libevent thread has its own event_base, kept in me->base
     event_base_set(me->base, &me->notify_event);
 
     if (event_add(&me->notify_event, 0) == -1) {
@@ -391,6 +393,8 @@ static void *worker_libevent(void *arg) {
 }
 
 
+
+//This function is notified by the main thread that a new connection is comming
 /*
  * Processes an incoming "handle a new connection" item. This is called when
  * input arrives on the libevent wakeup pipe.
@@ -410,6 +414,7 @@ static void thread_libevent_process(int fd, short which, void *arg) {
 
     switch (buf[0]) {
     case 'c':
+        //pick the a connection from the queue
         item = cq_pop(me->new_conn_queue);
 
         if (NULL == item) {
@@ -417,6 +422,8 @@ static void thread_libevent_process(int fd, short which, void *arg) {
         }
         switch (item->mode) {
             case queue_new_conn:
+                //In this function, a connn is created and the event associated with this conn 
+                //is also created and is added to the event_base which owned by the libevent thread   
                 c = conn_new(item->sfd, item->init_state, item->event_flags,
                                    item->read_buffer_size, item->transport,
                                    me->base);
@@ -490,9 +497,11 @@ void dispatch_conn_new(int sfd, enum conn_states init_state, int event_flags,
     item->transport = transport;
     item->mode = queue_new_conn;
 
+    //When there is a huge vulume of incomming connection, the conection is first buffered thread->new_conn_queue list
     cq_push(thread->new_conn_queue, item);
 
     MEMCACHED_CONN_DISPATCH(sfd, thread->thread_id);
+    //Notify the corresponing libevent thread the arrival of connection.
     buf[0] = 'c';
     if (write(thread->notify_send_fd, buf, 1) != 1) {
         perror("Writing to thread notify pipe");
