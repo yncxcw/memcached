@@ -2971,6 +2971,10 @@ static size_t tokenize_command(char *command, token_t *tokens, const size_t max_
     size_t len = strlen(command);
     unsigned int i = 0;
 
+    //print tokenized commands
+    if(settings.verbose > 1){
+        fprintf(stderr, "print command %s \n", command);
+    }
     assert(command != NULL && tokens != NULL && max_tokens > 1);
 
     s = e = command;
@@ -3005,7 +3009,7 @@ static size_t tokenize_command(char *command, token_t *tokens, const size_t max_
     tokens[ntokens].value =  *e == '\0' ? NULL : e;
     tokens[ntokens].length = 0;
     ntokens++;
-
+    
     return ntokens;
 }
 
