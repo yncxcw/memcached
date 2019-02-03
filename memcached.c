@@ -5801,7 +5801,7 @@ void event_handler(const int fd, const short which, void *arg) {
 
     if(c->event_sampling % 100000 == 0){
         end = clock();
-        {
+        if (settings.verbose > 0){
             fprintf(stderr, "event_process time %f millsecond \n", 1000*(double)(end - start) / CLOCKS_PER_SEC);
         }
     }
