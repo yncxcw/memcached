@@ -630,6 +630,8 @@ conn *conn_new(const int sfd, enum conn_states init_state,
     event_base_set(base, &c->event);
     c->ev_flags = event_flags;
 
+    c->event_sampling = 0;
+
     if (event_add(&c->event, 0) == -1) {
         perror("event_add");
         return NULL;
@@ -3813,6 +3815,10 @@ static inline void process_get_command(conn *c, token_t *tokens, size_t ntokens,
     int i = 0;
     int si = 0;
     item *it;
+
+    //note:
+    //&tokens[0] keeps the operations
+    //&tokens[1] keeps the key   
     token_t *key_token = &tokens[KEY_TOKEN];
     char *suffix;
     int32_t exptime_int = 0;
@@ -3841,10 +3847,12 @@ static inline void process_get_command(conn *c, token_t *tokens, size_t ntokens,
                 goto stop;
             }
 
+            // get the key-value item pair from the cache
             it = limited_get(key, nkey, c, exptime, should_touch);
             if (settings.detail_enabled) {
                 stats_prefix_record_get(key, nkey, NULL != it);
             }
+            // if the value is found
             if (it) {
                 if (_ascii_get_expand_ilist(c, i) != 0) {
                     item_remove(it);
@@ -5783,7 +5791,20 @@ void event_handler(const int fd, const short which, void *arg) {
         return;
     }
 
+    clock_t start=0, end=0; 
+    c->event_sampling++;
+
+    if(c->event_sampling % 100000 == 0){
+        start = clock();
+    }
     drive_machine(c);
+
+    if(c->event_sampling % 100000 == 0){
+        end = clock();
+        {
+            fprintf(stderr, "event_process time %f millsecond \n", 1000*(double)(end - start) / CLOCKS_PER_SEC);
+        }
+    }
 
     /* wait for next event */
     return;
