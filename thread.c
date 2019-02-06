@@ -12,7 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-
+#include <unistd.h>
+#include <sys/syscall.h>
 #ifdef __sun
 #include <atomic.h>
 #endif
@@ -369,8 +370,14 @@ static void setup_thread(LIBEVENT_THREAD *me) {
  * Worker thread: main event loop
  */
 static void *worker_libevent(void *arg) {
-    
-    fprintf(stderr, "working thread launched as %d\n", getpid());
+   
+    //There is no glibc implementation for gettid
+    #ifdef SYS_gettid
+    pid_t tid = syscall(SYS_gettid);
+    #else
+    #error "SYS_gettid unavailable on this system"
+    #endif 
+    fprintf(stderr, "working thread launched as %d\n", tid);
     LIBEVENT_THREAD *me = arg;
 
     /* Any per-thread setup can happen here; memcached_thread_init() will block until
