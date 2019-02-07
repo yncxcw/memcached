@@ -245,6 +245,7 @@ static void settings_init(void) {
     settings.slab_page_size = 1024 * 1024; /* chunks are split from 1MB pages. */
     settings.slab_chunk_size_max = settings.slab_page_size / 2;
     settings.sasl = false;
+    settings.thread_affinity = false;
     settings.maxconns_fast = true;
     settings.lru_crawler = false;
     settings.lru_crawler_sleep = 100;
@@ -6787,6 +6788,7 @@ int main (int argc, char **argv) {
           "f:"  /* factor? */
           "n:"  /* minimum space allocated for key+value+flags */
           "t:"  /* threads */
+          "T:"  /* thread-cpu affinity */  
           "D:"  /* prefix delimiter? */
           "L"   /* Large memory pages */
           "R:"  /* max requests per event */
@@ -6959,6 +6961,9 @@ int main (int argc, char **argv) {
                                 " Set this value to the number of cores in"
                                 " your machine or less.\n");
             }
+            break;
+        case 'T':
+            settings.thread_affinity = true;
             break;
         case 'D':
             if (! optarg || ! optarg[0]) {

@@ -283,14 +283,24 @@ static void cqi_free(CQ_ITEM *item) {
 
 
 /*
- * Creates a worker thread.
+ * Creates a worker thread on a specific cpu
  */
-static void create_worker(void *(*func)(void *), void *arg) {
+static void create_worker(void *(*func)(void *), void *arg, int cpu_index) {
     pthread_attr_t  attr;
     int             ret;
 
     pthread_attr_init(&attr);
+    if(settings.thread_affinity){
+        cpu_set_t cpuset;
+        CPU_ZERO(&cpuset);
+        CPU_SET(cpu_index, &cpuset); 
+        int rc = pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpuset);
+        if (rc != 0) {
+            fprintf(stderr, "Error calling pthread_attr_setaffinity_np: %d \n", rc);
+        }
 
+    }
+    
     if ((ret = pthread_create(&((LIBEVENT_THREAD*)arg)->thread_id, &attr, func, arg)) != 0) {
         fprintf(stderr, "Can't create thread: %s\n",
                 strerror(ret));
@@ -826,9 +836,18 @@ void memcached_thread_init(int nthreads, void *arg) {
         stats_state.reserved_fds += 5;
     }
 
+    /* pin the main thread to cpu 0*/
+    if (settings.thread_affinity){
+        cpu_set_t cpuset; 
+        CPU_ZERO(&cpuset);       
+        CPU_SET(0, &cpuset);
+        sched_setaffinity(0, sizeof(cpuset), &cpuset);
+    }
+    
     /* Create threads after we've done all the libevent setup. */
+    /* pin the ith thread on the i+1 cpu core */
     for (i = 0; i < nthreads; i++) {
-        create_worker(worker_libevent, &threads[i]);
+        create_worker(worker_libevent, &threads[i], i+1);
     }
 
     /* Wait for all the threads to set themselves up before returning. */
