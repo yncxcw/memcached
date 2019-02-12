@@ -245,7 +245,7 @@ static void settings_init(void) {
     settings.slab_page_size = 1024 * 1024; /* chunks are split from 1MB pages. */
     settings.slab_chunk_size_max = settings.slab_page_size / 2;
     settings.sasl = false;
-    settings.thread_affinity = false;
+    settings.thread_affinity = -1;
     settings.maxconns_fast = true;
     settings.lru_crawler = false;
     settings.lru_crawler_sleep = 100;
@@ -6963,7 +6963,10 @@ int main (int argc, char **argv) {
             }
             break;
         case 'T':
-            settings.thread_affinity = true;
+            settings.thread_affinity = atoi(optarg);
+            if (settings.thread_affinity <0 ){
+                fprintf(stderr, "The starting index of the CPU must be positive");
+            }
             break;
         case 'D':
             if (! optarg || ! optarg[0]) {

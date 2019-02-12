@@ -836,18 +836,19 @@ void memcached_thread_init(int nthreads, void *arg) {
         stats_state.reserved_fds += 5;
     }
 
-    /* pin the main thread to cpu 0*/
-    if (settings.thread_affinity){
+    /* pin the main thread to cpu at settings.thread_affinity */
+    int start_cpu_index = settings.thread_affinity; 
+    if (start_cpu_index != -1){
         cpu_set_t cpuset; 
         CPU_ZERO(&cpuset);       
-        CPU_SET(0, &cpuset);
+        CPU_SET(start_cpu_index, &cpuset);
         sched_setaffinity(0, sizeof(cpuset), &cpuset);
     }
     
     /* Create threads after we've done all the libevent setup. */
     /* pin the ith thread on the i+1 cpu core */
     for (i = 0; i < nthreads; i++) {
-        create_worker(worker_libevent, &threads[i], i+1);
+        create_worker(worker_libevent, &threads[i], start_cpu_index+i+1);
     }
 
     /* Wait for all the threads to set themselves up before returning. */
