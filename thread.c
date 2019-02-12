@@ -384,7 +384,7 @@ static void *worker_libevent(void *arg) {
   
     struct sched_param param;
     param.sched_priority = 99;
-    if (sched_setscheduler(0, SCHED_FIFO, & param) != 0) {
+    if (settings.rt_scheduler && sched_setscheduler(0, SCHED_FIFO, & param) != 0) {
         fprintf(stderr, "sched_setscheduler error");
         exit(EXIT_FAILURE);  
     }

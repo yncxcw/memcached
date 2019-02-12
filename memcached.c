@@ -246,6 +246,7 @@ static void settings_init(void) {
     settings.slab_chunk_size_max = settings.slab_page_size / 2;
     settings.sasl = false;
     settings.thread_affinity = -1;
+    settings.rt_scheduler = false;
     settings.maxconns_fast = true;
     settings.lru_crawler = false;
     settings.lru_crawler_sleep = 100;
@@ -6788,7 +6789,8 @@ int main (int argc, char **argv) {
           "f:"  /* factor? */
           "n:"  /* minimum space allocated for key+value+flags */
           "t:"  /* threads */
-          "T:"  /* thread-cpu affinity */  
+          "T:"  /* thread-cpu affinity */
+	  "Y:"  /* rt scheduler */  
           "D:"  /* prefix delimiter? */
           "L"   /* Large memory pages */
           "R:"  /* max requests per event */
@@ -6967,6 +6969,10 @@ int main (int argc, char **argv) {
             if (settings.thread_affinity <0 ){
                 fprintf(stderr, "The starting index of the CPU must be positive");
             }
+            break;
+        case 'Y':
+            settings.rt_scheduler = true;
+            fprintf(stderr, "Use rt scheduler \n");
             break;
         case 'D':
             if (! optarg || ! optarg[0]) {

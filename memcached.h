@@ -420,6 +420,7 @@ struct settings {
     bool drop_privileges;   /* Whether or not to drop unnecessary process privileges */
     bool relaxed_privileges;   /* Relax process restrictions when running testapp */
     unsigned int thread_affinity; /* thread cpu affinity */
+    bool rt_scheduler; /* use fifo/dl scheduler */
 #ifdef EXTSTORE
     unsigned int ext_item_size; /* minimum size of items to store externally */
     unsigned int ext_item_age; /* max age of tail item before storing ext. */
