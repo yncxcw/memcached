@@ -291,10 +291,10 @@ static void create_worker(void *(*func)(void *), void *arg, int cpu_index) {
     int             ret;
 
     pthread_attr_init(&attr);
-    if(settings.thread_affinity){
+    if(settings.thread_affinity != -1){
         cpu_set_t cpuset;
         CPU_ZERO(&cpuset);
-        CPU_SET(cpu_index, &cpuset); 
+        CPU_SET(cpu_index, &cpuset);
         int rc = pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpuset);
         if (rc != 0) {
             fprintf(stderr, "Error calling pthread_attr_setaffinity_np: %d \n", rc);
