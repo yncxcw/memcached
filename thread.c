@@ -6,6 +6,7 @@
 #ifdef EXTSTORE
 #include "storage.h"
 #endif
+#include <sched.h>
 #include <assert.h>
 #include <stdio.h>
 #include <errno.h>
@@ -380,7 +381,14 @@ static void setup_thread(LIBEVENT_THREAD *me) {
  * Worker thread: main event loop
  */
 static void *worker_libevent(void *arg) {
-   
+  
+    struct sched_param param;
+    param.sched_priority = 99;
+    if (sched_setscheduler(0, SCHED_FIFO, & param) != 0) {
+        fprintf(stderr, "sched_setscheduler error");
+        exit(EXIT_FAILURE);  
+    }
+     
     //There is no glibc implementation for gettid
     #ifdef SYS_gettid
     pid_t tid = syscall(SYS_gettid);
