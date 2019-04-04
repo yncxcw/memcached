@@ -299,6 +299,7 @@ static void create_worker(void *(*func)(void *), void *arg, int cpu_index) {
         if (rc != 0) {
             fprintf(stderr, "Error calling pthread_attr_setaffinity_np: %d \n", rc);
         }
+	fprintf(stderr, "launching thread at cpu %d\n", cpu_index);	
 
     }
     
@@ -845,8 +846,9 @@ void memcached_thread_init(int nthreads, void *arg) {
     }
 
     /* pin the main thread to cpu at settings.thread_affinity */
-    int start_cpu_index = settings.thread_affinity; 
+    int start_cpu_index = settings.thread_affinity;
     if (start_cpu_index != -1){
+	fprintf(stderr, "launching master at cpu %d", start_cpu_index);    	
         cpu_set_t cpuset; 
         CPU_ZERO(&cpuset);       
         CPU_SET(start_cpu_index, &cpuset);
